@@ -6,7 +6,8 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/title_bar_height">
+        android:layout_height="@dimen/title_bar_height"
+        android:background="@color/fff">
 
         <ImageButton
             android:id="@+id/but_back"
@@ -22,14 +23,16 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_centerInParent="true"
+            android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLength="10"
             android:singleLine="true"
             android:text="明天去哪里吃饭，这是个问题"
             android:textColor="@drawable/selector_color_444_111"
-            android:textSize="19sp" />
+            android:textSize="15sp" />
 
         <ImageView
+            android:id="@+id/img_indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
@@ -50,11 +53,12 @@
             android:layout_marginRight="6dp"
             android:layout_marginTop="10dp"
             android:background="@drawable/selector_bg_txt_right"
+            android:enabled="false"
             android:gravity="center"
             android:minWidth="50dp"
             android:paddingLeft="6dp"
             android:paddingRight="6dp"
-            android:text="下一步(10)"
+            android:text="下一步"
             android:textColor="@drawable/selector_color_fff_enable_false_aaa"
             android:textSize="13sp" />
 
@@ -83,9 +87,10 @@
             android:visibility="gone" />
 
         <ListView
-            android:id="@+id/list_view"
+            android:id="@+id/list_view_folder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="#F00"
             android:cacheColorHint="@color/transparent"
             android:visibility="gone" />
 

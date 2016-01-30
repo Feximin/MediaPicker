@@ -22,6 +22,10 @@ public class MediaEntity {
 
     private int type;
 
+    public MediaEntity(String path) {
+        this.path = path;
+    }
+
     @Type
     public int getType() {
         return type;
