@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.Window;
@@ -13,7 +16,6 @@ import android.view.animation.AnticipateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.AdapterView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.nineoldandroids.animation.Animator;
@@ -23,27 +25,37 @@ import com.nineoldandroids.animation.ObjectAnimator;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 
 /**
  * Created by Neo on 16/1/29.
  */
-public class ActivityPicker extends Activity implements View.OnClickListener, AdapterView.OnItemClickListener {
+public class ActivityPicker extends Activity implements View.OnClickListener, AdapterView.OnItemClickListener, MediaFinder.OnRefreshListener, AdapterListFolder.OnFolderClickListener {
     private TextView mTxtTitle;
-    private ListView mListViewFolder;
     private View mMask;
     private ImageView mImgIndicator;
-    private MediaFinder mMediaFinder;
+    private RecyclerView mListViewFolder;
+    private RecyclerView mRecyclerView;
+    private AdapterMediaGrid mAdapter;
+    private AdapterListFolder mAdapterListFolder;
+    private MediaManager mMediaManager;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_picker);
+
+
         mTxtTitle = (TextView) findViewById(R.id.txt_title);
         mTxtTitle.setOnClickListener(this);
+        mTxtTitle.setText("所有图片");
+        mTxtTitle.setEnabled(false);
 
-        mListViewFolder = (ListView) findViewById(R.id.list_view_folder);
-        mListViewFolder.setOnItemClickListener(this);
-
+        mListViewFolder = (RecyclerView) findViewById(R.id.recycler_view_folder);
+        mListViewFolder.setLayoutManager(new LinearLayoutManager(this));
+        mAdapterListFolder = new AdapterListFolder(this);
+        mAdapterListFolder.setOnFolderClickListener(this);
+        mListViewFolder.setAdapter(mAdapterListFolder);
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         int h = metrics.heightPixels / 2;
         mListViewFolder.getLayoutParams().height = h;
@@ -53,8 +65,20 @@ public class ActivityPicker extends Activity implements View.OnClickListener, Ad
         mMask.setOnClickListener(v -> doToggleListFolder());
 
         mImgIndicator = (ImageView) findViewById(R.id.img_indicator);
-        mMediaFinder = MediaFinder.getInstance();
-        mMediaFinder.refreshImmediately(this);
+
+        this.mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        this.mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
+        this.mAdapter = new AdapterMediaGrid(this);
+        this.mRecyclerView.setAdapter(this.mAdapter);
+
+        Config config = new Config.Builder()
+                .image(new Config.ImageRequest(9, 500 * 1024))
+                .video(new Config.VideoRequest(1, 10 * 1024 * 1024, 3 * 1000, 60 * 1000))
+                .build();
+        mMediaManager = MediaManager.getInstance(this);
+        mMediaManager.initConfig(config);
+        mMediaManager.setOnRefreshListener(this);
+        mMediaManager.refreshImmediately();
     }
 
     private static final int STATUS_GONE = 0;
@@ -63,6 +87,26 @@ public class ActivityPicker extends Activity implements View.OnClickListener, Ad
 
     @Status
     private int mCurStatus = STATUS_GONE;
+
+
+    @Override
+    public void onRefreshCompleted(List<MediaFolder> folderList) {
+        mTxtTitle.setEnabled(true);
+        mCurMediaFolder = folderList.get(0);
+        mAdapter.setMediaFolder(mCurMediaFolder);
+        mAdapterListFolder.add(folderList);
+    }
+
+    private MediaFolder mCurMediaFolder;
+    @Override
+    public void onFolderClick(MediaFolder folder, int position) {
+        if(mCurStatus != STATUS_VISIBLE) return;
+        mCurMediaFolder = folder;
+        doToggleListFolder();
+        mTxtTitle.setText(folder.getName());
+        mAdapter.setMediaFolder(folder);
+
+    }
 
     @IntDef({STATUS_GONE, STATUS_VISIBLE, STATUS_ACTIVE})
     @Retention(RetentionPolicy.SOURCE)
@@ -136,6 +180,7 @@ public class ActivityPicker extends Activity implements View.OnClickListener, Ad
         });
         set.start();
     }
+
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

@@ -1,39 +1,27 @@
 package com.feximin.mediapicker;
 
-import android.support.annotation.IntDef;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Created by Neo on 16/1/29.
  */
-public class MediaEntity {
+public class MediaEntity implements Parcelable {
     private String path;
-    private MediaFolder mParentFolder;
+    private boolean selected;
 
-    public static final int TYPE_IMAGE = 0;
-    public static final int TYPE_VIDEO = 1;
-    public static final int TYPE_AUDIO = 2;
+    public boolean isSelected() {
+        return selected;
+    }
 
-    @IntDef({TYPE_IMAGE, TYPE_VIDEO, TYPE_AUDIO})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Type{}
-
-    private int type;
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
 
     public MediaEntity(String path) {
         this.path = path;
     }
 
-    @Type
-    public int getType() {
-        return type;
-    }
-
-    public void setType(@Type int type) {
-        this.type = type;
-    }
 
     public String getPath() {
         return path;
@@ -43,11 +31,160 @@ public class MediaEntity {
         this.path = path;
     }
 
-    public MediaFolder getmParentFolder() {
-        return mParentFolder;
+
+    public static class ImageEntity extends MediaEntity{
+
+        public ImageEntity(String path) {
+            super(path);
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+        }
+
+        protected ImageEntity(Parcel in) {
+            super(in);
+        }
+
+        public static final Creator<ImageEntity> CREATOR = new Creator<ImageEntity>() {
+            public ImageEntity createFromParcel(Parcel source) {
+                return new ImageEntity(source);
+            }
+
+            public ImageEntity[] newArray(int size) {
+                return new ImageEntity[size];
+            }
+        };
     }
 
-    public void setmParentFolder(MediaFolder mParentFolder) {
-        this.mParentFolder = mParentFolder;
+    public static class AudioEntity extends MediaEntity{
+
+        private int duration;
+        public AudioEntity(String path, int duration) {
+            super(path);
+            this.duration = duration;
+        }
+
+        public int getDuration() {
+            return duration;
+        }
+
+        public void setDuration(int duration) {
+            this.duration = duration;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeInt(this.duration);
+        }
+
+        protected AudioEntity(Parcel in) {
+            super(in);
+            this.duration = in.readInt();
+        }
+
+        public static final Creator<AudioEntity> CREATOR = new Creator<AudioEntity>() {
+            public AudioEntity createFromParcel(Parcel source) {
+                return new AudioEntity(source);
+            }
+
+            public AudioEntity[] newArray(int size) {
+                return new AudioEntity[size];
+            }
+        };
     }
+
+    public static class VideoEntity extends MediaEntity{
+
+        private String thumb;
+        private int duration;
+        public VideoEntity(String path, int duration) {
+            super(path);
+            thumb = "";
+            this.duration = duration;
+        }
+
+        public int getDuration() {
+            return duration;
+        }
+
+        public void setDuration(int duration) {
+            this.duration = duration;
+        }
+
+        public String getThumb() {
+            return thumb;
+        }
+
+        public void setThumb(String thumb) {
+            this.thumb = thumb;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeString(this.thumb);
+            dest.writeInt(this.duration);
+        }
+
+        protected VideoEntity(Parcel in) {
+            super(in);
+            this.thumb = in.readString();
+            this.duration = in.readInt();
+        }
+
+        public static final Creator<VideoEntity> CREATOR = new Creator<VideoEntity>() {
+            public VideoEntity createFromParcel(Parcel source) {
+                return new VideoEntity(source);
+            }
+
+            public VideoEntity[] newArray(int size) {
+                return new VideoEntity[size];
+            }
+        };
+    }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.path);
+        dest.writeByte(selected ? (byte) 1 : (byte) 0);
+    }
+
+    protected MediaEntity(Parcel in) {
+        this.path = in.readString();
+        this.selected = in.readByte() != 0;
+    }
+
+    public static final Creator<MediaEntity> CREATOR = new Creator<MediaEntity>() {
+        public MediaEntity createFromParcel(Parcel source) {
+            return new MediaEntity(source);
+        }
+
+        public MediaEntity[] newArray(int size) {
+            return new MediaEntity[size];
+        }
+    };
 }

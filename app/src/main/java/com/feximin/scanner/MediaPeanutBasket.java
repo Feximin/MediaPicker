@@ -1,50 +1,23 @@
-package com.feximin.mediapicker;
+package com.feximin.scanner;
 
-import android.support.annotation.IntDef;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Neo on 16/1/29.
- * 文件夹
+ * Created by Neo on 16/1/30.
  */
-public class MediaFolder {
+public class MediaPeanutBasket<T extends AbstractMediaPeanut>  {
+
     private String path;
     private int num;
     private String name;
     private String albumPath ;   // 第一张图片作为封面
+    private List<T> children = new ArrayList<>(1);
 
-    public static final int IMAGE = 0;
-    public static final int AUDIO = 1;
-    public static final int VIDEO = 2;
+    public MediaPeanutBasket(){}
 
-    @IntDef({IMAGE, AUDIO, VIDEO})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Type{}
-
-
-    private int type;
-    private List<MediaEntity> children = new ArrayList<>(1);
-
-    public MediaFolder(){}
-
-    public MediaFolder(String name){
+    public MediaPeanutBasket(String name){
         this.name = name;
-    }
-    public MediaFolder(String name, int type){
-        this.name = name;
-        this.type = type;
-    }
-
-    public int getType() {
-        return type;
-    }
-
-    public void setType(int type) {
-        this.type = type;
     }
 
     public String getPath() {
@@ -79,15 +52,11 @@ public class MediaFolder {
         this.albumPath = albumPath;
     }
 
-    public List<MediaEntity> getChildren() {
+    public List<T> getChildren() {
         return children;
     }
 
-    public void setChildren(List<MediaEntity> mChildren) {
-        this.children = mChildren;
-    }
-
-    public void add(MediaEntity entity){
+    public void add(T entity){
         children.add(entity);
         num ++;
     }
@@ -102,7 +71,7 @@ public class MediaFolder {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        MediaFolder that = (MediaFolder) o;
+        MediaPeanutBasket<?> that = (MediaPeanutBasket<?>) o;
 
         return path != null ? path.equals(that.path) : that.path == null;
 
