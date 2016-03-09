@@ -76,7 +76,6 @@ public class ActivityVideoShower extends Activity {
         mVideoView.getLayoutParams().width = (int) destW;
         mVideoView.requestLayout();
         mVideoView.start();
-        mVideoView.setBackgroundColor(0);
     }
 
     public static final String ENTITY = "video_path";
