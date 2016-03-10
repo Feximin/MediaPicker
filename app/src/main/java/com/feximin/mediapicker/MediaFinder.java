@@ -19,9 +19,9 @@ import java.util.Map;
  * Created by Neo on 16/1/30.
  */
 public class MediaFinder {
-    private MediaFolder mAllImageFolder = new MediaFolder("所有图片", MediaFolder.IMAGE);
-    private MediaFolder mAllAudioFolder = new MediaFolder("所有音频", MediaFolder.AUDIO);
-    private MediaFolder mAllVideoFolder = new MediaFolder("所有视频", MediaFolder.VIDEO);
+    private MediaFolder mAllImageFolder = new MediaFolder("所有图片", Type.Image);
+    private MediaFolder mAllAudioFolder = new MediaFolder("所有音频", Type.Audio);
+    private MediaFolder mAllVideoFolder = new MediaFolder("所有视频", Type.Video);
     private Config mConfig;
 
     public void setConfig(Config config){
@@ -44,9 +44,9 @@ public class MediaFinder {
         this.mCurStatus = REFRESHING;
         clearAndEnsureFullFolder();
         ContentResolver resolver = context.getContentResolver();
-        if (needRefresh(MediaFolder.IMAGE)) refreshImage(resolver);
-        if (needRefresh(MediaFolder.AUDIO))refreshAudio(resolver);
-        if (needRefresh(MediaFolder.VIDEO))refreshVideo(resolver);
+        if (needRefresh(Type.Image)) refreshImage(resolver);
+        if (needRefresh(Type.Audio))refreshAudio(resolver);
+        if (needRefresh(Type.Video))refreshVideo(resolver);
         this.mCurStatus = REFRESH_COMPLETED;
         if (mOnRefreshListener != null) mOnRefreshListener.onRefreshCompleted(getAllFolder());
     }
@@ -57,22 +57,15 @@ public class MediaFinder {
         mAllVideoFolder.clear();
         mExistMediaFolder.clear();
 
-        if (needRefresh(MediaFolder.IMAGE)) mExistMediaFolder.put(mAllImageFolder.getName(), mAllImageFolder);
-        if (needRefresh(MediaFolder.AUDIO)) mExistMediaFolder.put(mAllAudioFolder.getName(), mAllAudioFolder);
-        if (needRefresh(MediaFolder.VIDEO)) mExistMediaFolder.put(mAllVideoFolder.getName(), mAllVideoFolder);
+        if (needRefresh(Type.Image)) mExistMediaFolder.put(mAllImageFolder.getName(), mAllImageFolder);
+        if (needRefresh(Type.Audio)) mExistMediaFolder.put(mAllAudioFolder.getName(), mAllAudioFolder);
+        if (needRefresh(Type.Video)) mExistMediaFolder.put(mAllVideoFolder.getName(), mAllVideoFolder);
     }
 
     //如果config中包含了就需要刷新，否则不需要
-    private boolean needRefresh(@MediaFolder.Type int type){
-        Class<?> key = null;
-        if (type == MediaFolder.IMAGE){
-            key = MediaEntity.ImageEntity.class;
-        }else if (type == MediaFolder.VIDEO){
-            key = MediaEntity.VideoEntity.class;
-        }else if (type == MediaFolder.AUDIO){
-            key = MediaEntity.AudioEntity.class;
-        }
-        return mConfig.getRequestMap().containsKey(key);
+    private boolean needRefresh(Type type){
+        boolean need = mConfig.getRequestMap().containsKey(type);
+        return need;
     }
     private List<MediaFolder> getAllFolder(){
         List<MediaFolder> folders = new ArrayList<>(mExistMediaFolder.size());
@@ -107,7 +100,7 @@ public class MediaFinder {
         if(folder == null){
             folder = new MediaFolder();
             folder.setPath(parentDir);
-            folder.setType(MediaFolder.IMAGE);
+            folder.setType(Type.Image);
             String name = parentDir.substring(parentDir.lastIndexOf("/")+1);
             folder.setName(name);
             folder.setAlbumPath(path);
@@ -140,7 +133,7 @@ public class MediaFinder {
                 while (cursor.moveToNext()) {
                     String path = cursor.getString(index); // 文件地址
                     if (isValidSuffix(path) && isValidFile(path)) {
-                        MediaEntity.ImageEntity entity = new MediaEntity.ImageEntity(path);
+                        MediaEntity entity = new MediaEntity(path, Type.Image);
                         if (mAllImageFolder.getChildren().size() == 0) mAllImageFolder.setAlbumPath(path);
                         mAllImageFolder.add(entity);
                         getFolder(path).add(entity);
@@ -162,7 +155,7 @@ public class MediaFinder {
                     String path = cursor.getString(pathIndex); // 文件地址
                     if (isValidSuffix(path) && isValidFile(path)) {
                         int duration = cursor.getInt(durationIndex);
-                        MediaEntity.AudioEntity audio = new MediaEntity.AudioEntity(path, duration);
+                        MediaEntity audio = new MediaEntity(path, duration, Type.Audio);
                         mAllAudioFolder.add(audio);
                     }
                 }
@@ -182,7 +175,7 @@ public class MediaFinder {
                     String path = cursor.getString(pathIndex); // 文件地址
                     if (isValidSuffix(path) && isValidFile(path)) {
                         int duration = cursor.getInt(durationIndex);
-                        MediaEntity.VideoEntity video = new MediaEntity.VideoEntity(path, duration);
+                        MediaEntity video = new MediaEntity(path, duration, Type.Video);
                         if (mAllVideoFolder.getChildren().size() == 0) mAllVideoFolder.setAlbumPath(path);
                         mAllVideoFolder.add(video);
                     }

@@ -12,7 +12,7 @@ import android.widget.VideoView;
 /**
  * Created by Neo on 16/3/8.
  */
-public class ActivityVideoShower extends Activity {
+public class ActivityVideoShower extends ActivityShower implements MediaManager.OnMediaSelectListener {
 
     private MediaEntity mCurEntity;
     private VideoView mVideoView;
@@ -22,7 +22,6 @@ public class ActivityVideoShower extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_video_shower);
         mCurEntity = getIntent().getParcelableExtra(ENTITY);
         if (mCurEntity == null){
             finish();
@@ -56,6 +55,16 @@ public class ActivityVideoShower extends Activity {
                 return false;
             }
         });
+
+    }
+
+    protected void toggle(){
+        mImgCheck.setSelected(mMediaManager.toggle(mCurEntity) == MediaManager.Status.Add);
+    }
+
+    @Override
+    protected Type getCurType() {
+        return Type.Video;
     }
 
     //貌似设置ViewVideo的高度无效
@@ -84,5 +93,11 @@ public class ActivityVideoShower extends Activity {
         Intent intent = new Intent(activity, ActivityVideoShower.class);
         intent.putExtra(ENTITY, entity);
         activity.startActivity(intent);
+    }
+
+
+    @Override
+    protected int getLayoutResId() {
+        return R.layout.activity_video_shower;
     }
 }

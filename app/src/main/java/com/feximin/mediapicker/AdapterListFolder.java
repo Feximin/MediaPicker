@@ -44,7 +44,7 @@ public class AdapterListFolder extends RecyclerView.Adapter<AdapterListFolder.Vi
         Glide.with(mActivity).load(folder.getAlbumPath()).crossFade().into(holder.imgAlbum);
         holder.txtName.setText(String.format("%s(%d)", folder.getName(), folder.getNum()));
         holder.itemView.setOnClickListener(v -> {
-            if(mOnItemClickListener != null) mOnItemClickListener.onFolderClick(folder, position);
+            if(mOnFolderSelectListener != null) mOnFolderSelectListener.onFolderSelect(folder, position);
         });
     }
 
@@ -64,13 +64,13 @@ public class AdapterListFolder extends RecyclerView.Adapter<AdapterListFolder.Vi
         }
     }
 
-    private OnFolderClickListener mOnItemClickListener;
+    private OnFolderSelectListener mOnFolderSelectListener;
 
-    public void setOnFolderClickListener(OnFolderClickListener listener){
-        this.mOnItemClickListener = listener;
+    public void setOnFolderSelectListener(OnFolderSelectListener listener){
+        this.mOnFolderSelectListener = listener;
     }
 
-    public interface OnFolderClickListener{
-        void onFolderClick(MediaFolder folder, int position);
+    public interface OnFolderSelectListener{
+        void onFolderSelect(MediaFolder folder, int position);
     }
 }

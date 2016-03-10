@@ -5,11 +5,9 @@ import android.content.Context;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-import static com.feximin.mediapicker.MediaFinder.*;
+import static com.feximin.mediapicker.MediaFinder.OnRefreshListener;
 
 /**
  * Created by Neo on 16/3/9.
@@ -17,7 +15,6 @@ import static com.feximin.mediapicker.MediaFinder.*;
 public class MediaManager {
     private static final MediaManager sManager = new MediaManager();
     private List<MediaEntity> mSelectedList = new ArrayList<>(5);
-    private Map<String, MediaFolder> mExistFolderList = new LinkedHashMap<>();
     private Config mConfig;
     private Context mContext;
     private MediaFinder mMediaFinder = new MediaFinder();
@@ -39,37 +36,74 @@ public class MediaManager {
     }
 
     /**
+     * 如果已经选中，则取消，否则选中
      * @param entity
-     * @return 如果成功添加则返回true
+     * @return 选中返回true，取消选中返回false,不能选中也返回false
      */
-    public boolean add(MediaEntity entity){
-
-        int selectCount = getSelectedCount(entity);
-        int requestCount = getRequestCount(entity);
-        boolean ok = selectCount < requestCount;
-        if (ok){
-            entity.setSelected(true);
-            mSelectedList.add(entity);
+    public Status toggle(MediaEntity entity){
+        Status status;
+        if (isSelected(entity)){
+            mSelectedList.remove(entity);
+            status = Status.Remove;
         }else{
-            showNoMoreThanHint(entity);
+            int selectCount = getSelectedCount(entity);
+            int requestCount = getRequestCount(entity);
+            if (selectCount < requestCount){
+                mSelectedList.add(entity);
+                status = Status.Add;
+            }else{
+                showNoMoreThanHint(entity);
+                status = Status.Full;
+            }
         }
-        return ok;
+        if (status != Status.Full) {
+            for (OnMediaSelectListener listener : mOnMediaSelectListenerList) {
+                listener.onMediaSelect(entity.getType(), getSelectedCount(entity));
+            }
+        }
+        return status;
     }
 
-    public void remove(MediaEntity entity){
-        if (entity == null) return;
-        entity.setSelected(false);
-        mSelectedList.remove(entity);
+
+    public interface OnMediaSelectListener{
+        void onMediaSelect(Type type, int count);
+    }
+
+    private List<OnMediaSelectListener> mOnMediaSelectListenerList = new ArrayList<>(2);
+    public void addOnMediaSelectListener(OnMediaSelectListener listener){
+        if (listener != null && !mOnMediaSelectListenerList.contains(listener)){
+            mOnMediaSelectListenerList.add(listener);
+        }
+    }
+
+    public void removeOnMediaSelectListener(OnMediaSelectListener listener){
+        if (listener != null && mOnMediaSelectListenerList.contains(listener)){
+            mOnMediaSelectListenerList.remove(listener);
+        }
+    }
+
+    public enum Status{
+        Add, Remove, Full
+    }
+
+    /**
+     * 是否已经选中，根据路径判断
+     * @param entity
+     * @return
+     */
+    public boolean isSelected(MediaEntity entity){
+        boolean selected = mSelectedList.contains(entity);
+        return selected;
     }
 
     private void showNoMoreThanHint(MediaEntity entity){
-        Class<?> clazz = entity.getClass();
+        Type type = entity.getType();
         String format = "";
-        if (clazz == MediaEntity.ImageEntity.class){
+        if (type == Type.Image){
             format = "最多只能选择%d张图片";
-        }else if (clazz == MediaEntity.VideoEntity.class){
+        }else if (type == Type.Video){
             format = "最多只能选择%d个视频";
-        }else if (clazz == MediaEntity.AudioEntity.class){
+        }else if (type == Type.Audio){
             format = "最多只能选择%d条音频";
         }else {
             throw  new IllegalArgumentException("no this kind of media entity !!");
@@ -82,21 +116,25 @@ public class MediaManager {
         return mConfig.getRequest(entity).getTake();
     }
 
-    private int getSelectedCount(MediaEntity entity){
-        Class<?> clazz = entity.getClass();
+    public int getSelectedCount(MediaEntity entity){
+        return getSelectedCount(entity.getType());
+    }
+    public int getSelectedCount(Type type){
         int count = 0;
         for (MediaEntity en : mSelectedList){
-            if (en.getClass() == clazz){
+            if (en.getType() == type){
                 count ++ ;
             }
         }
         return count;
     }
 
-    private OnRefreshListener mOnRefreshListener;
+    public int getSelectedCount(MediaFolder folder){
+        return getSelectedCount(folder.getType());
+    }
 
     public void setOnRefreshListener(OnRefreshListener listener){
-        this.mOnRefreshListener = listener;
+        mMediaFinder.setOnRefreshListener(listener);
     }
 
     public void refresh(){

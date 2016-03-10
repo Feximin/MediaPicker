@@ -8,20 +8,24 @@ import android.os.Parcelable;
  */
 public class MediaEntity implements Parcelable {
     private String path;
-    private boolean selected;
-
-    public boolean isSelected() {
-        return selected;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
+    private Type type;
+    private int duration;
+    private String thumb;
 
     public MediaEntity(String path) {
         this.path = path;
     }
 
+    public MediaEntity(String path, Type type) {
+        this.path = path;
+        this.type = type;
+    }
+
+    public MediaEntity(String path, int duration, Type type) {
+        this.duration = duration;
+        this.path = path;
+        this.type = type;
+    }
 
     public String getPath() {
         return path;
@@ -31,136 +35,48 @@ public class MediaEntity implements Parcelable {
         this.path = path;
     }
 
-
-    public static class ImageEntity extends MediaEntity{
-
-        public ImageEntity(String path) {
-            super(path);
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            super.writeToParcel(dest, flags);
-        }
-
-        protected ImageEntity(Parcel in) {
-            super(in);
-        }
-
-        public static final Creator<ImageEntity> CREATOR = new Creator<ImageEntity>() {
-            public ImageEntity createFromParcel(Parcel source) {
-                return new ImageEntity(source);
-            }
-
-            public ImageEntity[] newArray(int size) {
-                return new ImageEntity[size];
-            }
-        };
+    public Type getType() {
+        return type;
     }
 
-    public static class AudioEntity extends MediaEntity{
-
-        private int duration;
-        public AudioEntity(String path, int duration) {
-            super(path);
-            this.duration = duration;
-        }
-
-        public int getDuration() {
-            return duration;
-        }
-
-        public void setDuration(int duration) {
-            this.duration = duration;
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            super.writeToParcel(dest, flags);
-            dest.writeInt(this.duration);
-        }
-
-        protected AudioEntity(Parcel in) {
-            super(in);
-            this.duration = in.readInt();
-        }
-
-        public static final Creator<AudioEntity> CREATOR = new Creator<AudioEntity>() {
-            public AudioEntity createFromParcel(Parcel source) {
-                return new AudioEntity(source);
-            }
-
-            public AudioEntity[] newArray(int size) {
-                return new AudioEntity[size];
-            }
-        };
+    public void setType(Type type) {
+        this.type = type;
     }
 
-    public static class VideoEntity extends MediaEntity{
-
-        private String thumb;
-        private int duration;
-        public VideoEntity(String path, int duration) {
-            super(path);
-            thumb = "";
-            this.duration = duration;
-        }
-
-        public int getDuration() {
-            return duration;
-        }
-
-        public void setDuration(int duration) {
-            this.duration = duration;
-        }
-
-        public String getThumb() {
-            return thumb;
-        }
-
-        public void setThumb(String thumb) {
-            this.thumb = thumb;
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            super.writeToParcel(dest, flags);
-            dest.writeString(this.thumb);
-            dest.writeInt(this.duration);
-        }
-
-        protected VideoEntity(Parcel in) {
-            super(in);
-            this.thumb = in.readString();
-            this.duration = in.readInt();
-        }
-
-        public static final Creator<VideoEntity> CREATOR = new Creator<VideoEntity>() {
-            public VideoEntity createFromParcel(Parcel source) {
-                return new VideoEntity(source);
-            }
-
-            public VideoEntity[] newArray(int size) {
-                return new VideoEntity[size];
-            }
-        };
+    public int getDuration() {
+        return duration;
     }
 
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public String getThumb() {
+        return thumb;
+    }
+
+    public void setThumb(String thumb) {
+        this.thumb = thumb;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MediaEntity entity = (MediaEntity) o;
+
+        if (path != null ? !path.equals(entity.path) : entity.path != null) return false;
+        return type == entity.type;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = path != null ? path.hashCode() : 0;
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        return result;
+    }
 
     @Override
     public int describeContents() {
@@ -170,12 +86,17 @@ public class MediaEntity implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.path);
-        dest.writeByte(selected ? (byte) 1 : (byte) 0);
+        dest.writeInt(this.type == null ? -1 : this.type.ordinal());
+        dest.writeInt(this.duration);
+        dest.writeString(this.thumb);
     }
 
     protected MediaEntity(Parcel in) {
         this.path = in.readString();
-        this.selected = in.readByte() != 0;
+        int tmpType = in.readInt();
+        this.type = tmpType == -1 ? null : Type.values()[tmpType];
+        this.duration = in.readInt();
+        this.thumb = in.readString();
     }
 
     public static final Creator<MediaEntity> CREATOR = new Creator<MediaEntity>() {

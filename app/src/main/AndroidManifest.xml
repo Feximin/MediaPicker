@@ -20,6 +20,7 @@
         </activity>
         <activity android:name=".ActivityPicker" />
         <activity android:name=".ActivityVideoShower" />
+        <activity android:name=".ActivityImageShower" />
     </application>
 
 </manifest>

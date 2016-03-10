@@ -1,9 +1,8 @@
 package com.feximin.mediapicker;
 
-import android.support.annotation.IntDef;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,39 +10,30 @@ import java.util.List;
  * Created by Neo on 16/1/29.
  * 文件夹
  */
-public class MediaFolder {
+public class MediaFolder implements Parcelable {
     private String path;
     private int num;
     private String name;
     private String albumPath ;   // 第一张图片作为封面
-
-    public static final int IMAGE = 0;
-    public static final int AUDIO = 1;
-    public static final int VIDEO = 2;
-
-    @IntDef({IMAGE, AUDIO, VIDEO})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Type{}
-
-
-    private int type;
     private List<MediaEntity> children = new ArrayList<>(1);
+
+    private Type type;
 
     public MediaFolder(){}
 
     public MediaFolder(String name){
         this.name = name;
     }
-    public MediaFolder(String name, int type){
+    public MediaFolder(String name, Type type){
         this.name = name;
         this.type = type;
     }
 
-    public int getType() {
+    public Type getType() {
         return type;
     }
 
-    public void setType(int type) {
+    public void setType(Type type) {
         this.type = type;
     }
 
@@ -97,19 +87,39 @@ public class MediaFolder {
         num = 0;
     }
 
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        MediaFolder that = (MediaFolder) o;
-
-        return path != null ? path.equals(that.path) : that.path == null;
-
+    public int describeContents() {
+        return 0;
     }
 
     @Override
-    public int hashCode() {
-        return path != null ? path.hashCode() : 0;
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.path);
+        dest.writeInt(this.num);
+        dest.writeString(this.name);
+        dest.writeString(this.albumPath);
+        dest.writeTypedList(children);
+        dest.writeInt(this.type == null ? -1 : this.type.ordinal());
     }
+
+    protected MediaFolder(Parcel in) {
+        this.path = in.readString();
+        this.num = in.readInt();
+        this.name = in.readString();
+        this.albumPath = in.readString();
+        this.children = in.createTypedArrayList(MediaEntity.CREATOR);
+        int tmpType = in.readInt();
+        this.type = tmpType == -1 ? null : Type.values()[tmpType];
+    }
+
+    public static final Creator<MediaFolder> CREATOR = new Creator<MediaFolder>() {
+        public MediaFolder createFromParcel(Parcel source) {
+            return new MediaFolder(source);
+        }
+
+        public MediaFolder[] newArray(int size) {
+            return new MediaFolder[size];
+        }
+    };
 }

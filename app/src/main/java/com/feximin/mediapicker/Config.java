@@ -11,16 +11,16 @@ import java.util.Map;
 public class Config  {
 
     private List<String> mSuffixList = new ArrayList<>(3);
-    private Map<Class<?>, Request> mRequestMap = new HashMap<>(3);
+    private Map<Type, Request> mRequestMap = new HashMap<>(3);
 
     Config() { }
 
 
-    public <T extends Request> T getRequest(MediaEntity entity){
-        return (T) mRequestMap.get(entity.getClass());
+    public Request getRequest(MediaEntity entity){
+        return  mRequestMap.get(entity.getType());
     }
 
-    public Map<Class<?>, Request> getRequestMap(){
+    public Map<Type, Request> getRequestMap(){
         return mRequestMap;
     }
 
@@ -32,7 +32,7 @@ public class Config  {
 
     public static class Builder{
         List<String> suffixList = new ArrayList<>(8);
-        private Map<Class<?>, Request> requestMap = new HashMap<>(3);
+        private Map<Type, Request> requestMap = new HashMap<>(3);
 
         public Builder(){
             suffixList.add("jpg");
@@ -44,24 +44,24 @@ public class Config  {
             suffixList.add("amr");
 
         }
-        public Builder image(ImageRequest request){
+        public Builder image(Request request){
             if (request != null){
-                requestMap.put(MediaEntity.ImageEntity.class, request);
+                requestMap.put(Type.Image, request);
             }
             return this;
         }
 
-        public Builder video(VideoRequest request){
+        public Builder video(Request request){
             if (request != null){
-                requestMap.put(MediaEntity.VideoEntity.class, request);
+                requestMap.put(Type.Video, request);
             }
 
             return this;
         }
 
-        public Builder audio(AudioRequest request){
+        public Builder audio(Request request){
             if (request != null){
-                requestMap.put(MediaEntity.AudioEntity.class, request);
+                requestMap.put(Type.Audio, request);
             }
             return this;
         }
@@ -89,17 +89,24 @@ public class Config  {
     }
 
 
-    abstract static class Request {
+    static class Request {
 
 
         protected int take;
         protected int maxSize;
+        protected int maxDuration;
+        protected int minDuration;
 
         public Request(int take, int maxSize) {
             this.take = take;
             this.maxSize = maxSize;
         }
 
+        public Request(int take, int maxSize, int maxDuration, int minDuration) {
+            this(take, maxSize);
+            this.maxDuration = maxDuration;
+            this.minDuration = minDuration;
+        }
         public int getMaxSize() {
             return maxSize;
         }
@@ -118,43 +125,4 @@ public class Config  {
 
     }
 
-    public static class ImageRequest extends Request{
-        public ImageRequest(int take, int maxSize) {
-            super(take, maxSize);
-        }
-    }
-
-    public static class VideoRequest extends Request{
-
-        protected int maxDuration;
-        protected int minDuration;
-
-        public VideoRequest(int take, int maxSize, int maxDuration, int minDuration) {
-            super(take, maxSize);
-            this.maxDuration = maxDuration;
-            this.minDuration = minDuration;
-        }
-
-        public int getMaxDuration() {
-            return maxDuration;
-        }
-
-        public void setMaxDuration(int maxDuration) {
-            this.maxDuration = maxDuration;
-        }
-
-        public int getMinDuration() {
-            return minDuration;
-        }
-
-        public void setMinDuration(int minDuration) {
-            this.minDuration = minDuration;
-        }
-    }
-
-    public static class AudioRequest extends VideoRequest{
-        public AudioRequest(int take, int maxSize, int maxDuration, int minDuration) {
-            super(take, maxSize, maxDuration, minDuration);
-        }
-    }
 }
