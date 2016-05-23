@@ -82,7 +82,7 @@ public class ActivityImageShower extends ActivityShower implements ViewPager.OnP
 
     @Override
     protected int getLayoutResId() {
-        return R.layout.activity_image_shower;
+        return R.layout.activity_shower_image;
     }
 
     class AdapterGallery extends PagerAdapter {

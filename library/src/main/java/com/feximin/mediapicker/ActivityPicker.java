@@ -156,10 +156,9 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.txt_title:
-                doToggleListFolder();
-                break;
+        int i = v.getId();
+        if (i == R.id.txt_title) {
+            doToggleListFolder();
         }
     }
 

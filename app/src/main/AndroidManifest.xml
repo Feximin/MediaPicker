@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.feximin.mediapicker">
+    package="com.feximin.mediapickersample">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
@@ -11,16 +11,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         
-        <activity android:name=".MainActivity">
+        <activity android:name="com.feximin.mediapickersample.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ActivityPicker" />
-        <activity android:name=".ActivityVideoShower" />
-        <activity android:name=".ActivityImageShower" />
+        <activity android:name="com.feximin.mediapicker.ActivityVideoShower" />
     </application>
 
 </manifest>
