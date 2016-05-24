@@ -12,12 +12,26 @@ public class Config  {
 
     private List<String> mSuffixList = new ArrayList<>(3);
     private Map<Integer, Request> mRequestMap = new HashMap<>(3);
+    private Crop crop;
 
-    Config() { }
+    public Config() {
+
+        mSuffixList.add("jpg");
+        mSuffixList.add("jpeg");
+        mSuffixList.add("png");
+        mSuffixList.add("mp4");
+        mSuffixList.add("3gp");
+        mSuffixList.add("avi");
+        mSuffixList.add("amr");
+    }
 
 
     public Request getRequest(MediaEntity entity){
         return  mRequestMap.get(entity.getType());
+    }
+
+    public Request getRequest(@MediaEntity.Type int type){
+        return mRequestMap.get(type);
     }
 
     public Map<Integer, Request> getRequestMap(){
@@ -29,80 +43,77 @@ public class Config  {
     }
 
 
+    public Crop getCrop(){
+        return crop;
+    }
 
-    public static class Builder{
-        List<String> suffixList = new ArrayList<>(8);
-        private Map<Integer, Request> requestMap = new HashMap<>(3);
-
-        public Builder(){
-            suffixList.add("jpg");
-            suffixList.add("jpeg");
-            suffixList.add("png");
-            suffixList.add("mp4");
-            suffixList.add("3gp");
-            suffixList.add("avi");
-            suffixList.add("amr");
-
+    public Config image(Request request){
+        if (request != null){
+            mRequestMap.put(MediaEntity.IMAGE, request);
         }
-        public Builder image(Request request){
-            if (request != null){
-                requestMap.put(MediaEntity.IMAGE, request);
+        return this;
+    }
+
+    public Config video(Request request){
+        if (request != null){
+            mRequestMap.put(MediaEntity.VIDEO, request);
+        }
+
+        return this;
+    }
+
+    public Config audio(Request request){
+        if (request != null){
+            mRequestMap.put(MediaEntity.AUDIO, request);
+        }
+        return this;
+    }
+
+    public Config crop(Crop crop){
+        this.crop = crop;
+        return this;
+    }
+    public Config clearSuffix(){
+        mSuffixList.clear();
+        return this;
+    }
+
+    public Config suffix(String...suffixes){
+        for (String suf : suffixes){
+            if (! mSuffixList.contains(suf)){
+                mSuffixList.add(suf);
             }
-            return this;
         }
+        return this;
+    }
 
-        public Builder video(Request request){
-            if (request != null){
-                requestMap.put(MediaEntity.VIDEO, request);
-            }
+    public static class Crop{
+        public float cropScale = 1;
+        public int outWidth;
 
-            return this;
-        }
-
-        public Builder audio(Request request){
-            if (request != null){
-                requestMap.put(MediaEntity.AUDIO, request);
-            }
-            return this;
-        }
-
-        public Builder clearSuffix(){
-            suffixList.clear();
-            return this;
-        }
-
-        public Builder suffix(String...suffixes){
-            for (String suf : suffixes){
-                if (! suffixList.contains(suf)){
-                    suffixList.add(suf);
-                }
-            }
-            return this;
-        }
-
-        public Config build(){
-            Config config = new Config();
-            config.mSuffixList.addAll(suffixList);
-            config.mRequestMap.putAll(requestMap);
-            return config;
+        public Crop(float cropScale, int outWidth) {
+            this.cropScale = cropScale;
+            this.outWidth = outWidth;
         }
     }
 
-
-    static class Request {
+    public static class Request {
 
 
         protected int take;
-        protected int maxSize;
-        protected int maxDuration;
+        protected int maxSize;              //字节
+        protected int maxDuration;          //毫秒
         protected int minDuration;
 
+        public Request(int take) {              //不限制大小
+            this.take = take;
+        }
         public Request(int take, int maxSize) {
             this.take = take;
             this.maxSize = maxSize;
         }
 
-        public Request(int take, int maxSize, int maxDuration, int minDuration) {
+        public Request(int take, int maxSize, int minDuration, int maxDuration) {
             this(take, maxSize);
             this.maxDuration = maxDuration;
             this.minDuration = minDuration;

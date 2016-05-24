@@ -121,11 +121,24 @@ public class AdapterMediaGrid extends BaseAdapter {
 
             Glide.with(mActivity).load(en.getPath()).crossFade().into(imgCover);
             if (type == MediaEntity.IMAGE){
-                foreView.setOnClickListener(v -> ActivityImageShower.startActivity(mActivity, mDataFolder, realPosition));
+                foreView.setOnClickListener(v -> {
+                    if (mOnMediaClickListener == null){
+                        ActivityImageShower.startActivity(mActivity, mDataFolder, realPosition);
+                    }else {
+                        mOnMediaClickListener.onMediaClick(en, realPosition);
+                    }
+                });
             }else if (type == MediaEntity.VIDEO){
                 TextView txtTime = (TextView) convertView.findViewById(R.id.txt_time);
                 txtTime.setText(getSecond(en.getDuration()));
-                foreView.setOnClickListener(v -> ActivityVideoShower.startActivity(mActivity, en));
+                foreView.setOnClickListener(v -> {
+                    if (mOnMediaClickListener == null){
+                        ActivityVideoShower.startActivity(mActivity, en);
+                    }else {
+                        mOnMediaClickListener.onMediaClick(en, realPosition);
+                    }
+
+                });
             }
         }
         return convertView;
@@ -136,6 +149,15 @@ public class AdapterMediaGrid extends BaseAdapter {
         if (position == 0) return 0;
         MediaEntity entity = mDada.get(position - 1);
         return entity.getType();
+    }
+
+    public interface OnMediaClickListener{
+        void onMediaClick(MediaEntity entity, int position);
+    }
+
+    private OnMediaClickListener mOnMediaClickListener;
+    public void setOnItemClickListener(OnMediaClickListener listener){
+        mOnMediaClickListener = listener;
     }
 
     @Override

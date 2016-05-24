@@ -1,6 +1,5 @@
 package com.feximin.mediapicker;
 
-import android.app.Activity;
 import android.content.Context;
 import android.widget.Toast;
 
@@ -20,10 +19,9 @@ public class MediaManager {
     private Config mConfig;
     private Context mContext;
     private MediaFinder mMediaFinder = new MediaFinder();
-    private MediaManager(){
-    }
+    private MediaManager(){}
 
-    public static MediaManager getInstance(Activity activity){
+    public static MediaManager getInstance(Context activity){
         sManager.mContext = activity.getApplicationContext();
         return sManager;
     }
@@ -66,6 +64,18 @@ public class MediaManager {
         return status;
     }
 
+    public Config.Crop getCropInfo(){
+        return mConfig.getCrop();
+    }
+    public List<MediaEntity> getSelectList(@Type int type){
+        List<MediaEntity> list = new ArrayList<>(1);
+        for (MediaEntity en : mSelectedList){
+            if (en.getType() == type){
+                list.add(en);
+            }
+        }
+        return list;
+    }
 
     public interface OnMediaSelectListener{
         void onMediaSelect(@Type int type, int count);
@@ -100,7 +110,7 @@ public class MediaManager {
 
     private void showNoMoreThanHint(MediaEntity entity){
         @Type int type = entity.getType();
-        String format = "";
+        String format;
         if (type == MediaEntity.IMAGE){
             format = "最多只能选择%d张图片";
         }else if (type == MediaEntity.VIDEO){
@@ -115,7 +125,10 @@ public class MediaManager {
     }
 
     public int getRequestCount(MediaEntity entity){
-        return mConfig.getRequest(entity).getTake();
+        return getRequestCount(entity.getType());
+    }
+    public int getRequestCount(@Type int type){
+        return mConfig.getRequest(type).getTake();
     }
 
     public int getSelectedCount(MediaEntity entity){

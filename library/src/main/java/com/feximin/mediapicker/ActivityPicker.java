@@ -10,6 +10,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.Window;
@@ -38,7 +39,7 @@ import java.util.List;
 /**
  * Created by Neo on 16/1/29.
  */
-public class ActivityPicker extends Activity implements View.OnClickListener,
+public abstract class ActivityPicker extends Activity implements View.OnClickListener,
         AdapterView.OnItemClickListener,
         MediaFinder.OnRefreshListener,
         AdapterListFolder.OnFolderSelectListener,
@@ -48,12 +49,13 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
     private ImageView mImgIndicator;
     private RecyclerView mListViewFolder;
     private GridView mGridView;
-    private AdapterMediaGrid mAdapter;
+    protected AdapterMediaGrid mAdapter;
     private AdapterListFolder mAdapterListFolder;
-    private MediaManager mMediaManager;
+    protected MediaManager mMediaManager;
     private TextView mTxtSelectCount;
     private String mDestPhotoUri;
     private String mDestVideoUri;
+    private String mDestCropPhotoUri;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -63,6 +65,7 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
         if (savedInstanceState != null){
             mDestPhotoUri = savedInstanceState.getString(DEST_PHOTO_PATH);
             mDestVideoUri = savedInstanceState.getString(DEST_VIDEO_PATH);
+            mDestCropPhotoUri = savedInstanceState.getString(DEST_CROP_PHOTO_PATH);
         }
 
         mTxtTitle = (TextView) findViewById(R.id.txt_title);
@@ -71,7 +74,7 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
         mTxtTitle.setEnabled(false);
 
         mTxtSelectCount = (TextView) findViewById(R.id.txt_right);
-
+        mTxtSelectCount.setOnClickListener(v -> onNextStep());
         mListViewFolder = (RecyclerView) findViewById(R.id.recycler_view_folder);
         mListViewFolder.setLayoutManager(new LinearLayoutManager(this));
         mAdapterListFolder = new AdapterListFolder(this);
@@ -82,29 +85,29 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
         mListViewFolder.getLayoutParams().height = h;
         mListViewFolder.requestLayout();
 
-        int dp5 = (int) Math.ceil(metrics.density * 5);
-
         mMask = findViewById(R.id.mask);
         mMask.setOnClickListener(v -> doToggleListFolder());
 
         mImgIndicator = (ImageView) findViewById(R.id.img_indicator);
 
         this.mGridView = (GridView) findViewById(R.id.grid_view);
+        this.mGridView.setOnItemClickListener(this);
         this.mAdapter = new AdapterMediaGrid(this);
         this.mGridView.setAdapter(this.mAdapter);
 
-        Config config = new Config.Builder()
-                .image(new Config.Request(9, 500 * 1024))
-                .video(new Config.Request(1, 10 * 1024 * 1024, 3 * 1000, 60 * 1000))
-                .build();
         mMediaManager = MediaManager.getInstance(this);
-        mMediaManager.initConfig(config);
+        mMediaManager.initConfig(getConfig());
         mMediaManager.setOnRefreshListener(this);
         mMediaManager.refreshImmediately();
         mMediaManager.addOnMediaSelectListener(this);
     }
     private final SimpleDateFormat sSimpleDateFormat = new SimpleDateFormat("yyyyMMdd__HHmmss");
 
+    protected abstract Config getConfig();
+
+    protected void onNextStep(){
+
+    }
     public String getMediaOutputUri(String suffix){
         String time = sSimpleDateFormat.format(new Date());
         File file = new File(getExternalCacheDir(),time + "." + suffix);
@@ -118,6 +121,9 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
     @Status
     private int mCurStatus = STATUS_GONE;
 
+    public void startActivity(Class<? extends Activity> activity){
+        startActivity(new Intent(this, activity));
+    }
 
     @Override
     public void onRefreshCompleted(List<MediaFolder> folderList) {
@@ -170,15 +176,17 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
 
     private final int REQUEST_TAKE_PHOTO = 2048;
     private final int REQUEST_MAKE_VIDEO = 2049;
+    private final int REQUEST_CROP_PHOTO = 2050;
     private final String DEST_PHOTO_PATH = "dest_photo_path";
     private final String DEST_VIDEO_PATH = "dest_video_path";
+    private final String DEST_CROP_PHOTO_PATH = "dest_crop_photo_path";
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         if (mDestPhotoUri != null) outState.putString(DEST_PHOTO_PATH, mDestPhotoUri);
         if (mDestVideoUri != null) outState.putString(DEST_VIDEO_PATH, mDestVideoUri);
-
+        if (mDestCropPhotoUri != null) outState.putString(DEST_CROP_PHOTO_PATH, mDestCropPhotoUri);
     }
 
     public void toTakePhoto(){
@@ -215,26 +223,77 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK){
             if (requestCode == REQUEST_TAKE_PHOTO){
-
-                File f = new File(mDestPhotoUri);
-                long length = f.length();
-                if (f.exists() && f.length() > 0){
+                Config.Crop crop = mMediaManager.getCropInfo();
+                if (isValidFile(mDestPhotoUri)) {
                     MediaEntity entity = new MediaEntity(mDestPhotoUri, MediaEntity.IMAGE);
                     mMediaManager.toggle(entity);
+                    if (crop == null) {
+                        onTakePhoto(mDestPhotoUri);
+                    } else {
+                        doCropPicture(mDestPhotoUri, crop);
+                    }
+                }else {
+                    Toast.makeText(ActivityPicker.this, "拍照失败", Toast.LENGTH_SHORT).show();
                 }
 
             }else if (requestCode == REQUEST_MAKE_VIDEO){
-                File f = new File(mDestVideoUri);
-                long length = f.length();
-                if (f.exists() && f.length() > 0){
+                if (isValidFile(mDestVideoUri)){
                     MediaEntity entity = new MediaEntity(mDestVideoUri, MediaEntity.VIDEO);
                     mMediaManager.toggle(entity);
+                    onMakeVideo(mDestVideoUri);
+                }else{
+                    Toast.makeText(ActivityPicker.this, "录制失败", Toast.LENGTH_SHORT).show();
+                }
+
+            }else if (requestCode == REQUEST_CROP_PHOTO){
+                if (isValidFile(mDestPhotoUri)){
+                    onCropFinish(mDestCropPhotoUri);
+                }else{
+                    Toast.makeText(ActivityPicker.this, "裁剪失败", Toast.LENGTH_SHORT).show();
                 }
 
             }
         }
     }
 
+    protected void onTakePhoto(String path){ }
+
+    protected void onMakeVideo(String path){}
+
+    protected void onCropFinish(String path){}
+
+    public void doCropPicture(String from, Config.Crop crop) {
+
+        Uri uri = Uri.fromFile(new File(from));
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        intent.setDataAndType(uri, "image/*");
+        // crop为true是设置在开启的intent中设置显示的view可以剪裁
+        intent.putExtra("crop", "true");
+        // aspectX aspectY 是宽高的比例
+        intent.putExtra("aspectX", 1 * 100);
+        intent.putExtra("aspectY", (int) ((1 / crop.cropScale) * 100));
+
+        // outputX,outputY 是剪裁图片的宽高
+        intent.putExtra("outputX", crop.outWidth);
+        intent.putExtra("outputY", (int) (crop.outWidth / crop.cropScale));
+        intent.putExtra("outputFormat", "JPEG");
+        intent.putExtra("scale", true);
+        intent.putExtra("return-data", false);
+        intent.putExtra("scaleUpIfNeeded", true); //黑边
+        intent.putExtra("output", Uri.fromFile(new File(mDestCropPhotoUri = getMediaOutputUri("jpg"))));
+        intent.putExtra("noFaceDetection", true);
+        startActivityForResult(intent, REQUEST_CROP_PHOTO);
+    }
+
+    public static boolean isValidFile(String path){
+        if (TextUtils.isEmpty(path)) return false;
+        File file = new File(path);
+        return isValidFile(file);
+    }
+
+    public static boolean isValidFile(File f){
+        return f != null && f.exists() && f.length() > 0;
+    }
     OvershootInterpolator interpolator = new OvershootInterpolator();
     AnticipateInterpolator anticipateInterpolator = new AnticipateInterpolator();
     private void show(){
