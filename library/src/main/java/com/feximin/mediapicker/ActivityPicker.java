@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
@@ -19,6 +18,7 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.AnticipateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.AdapterView;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,7 +47,7 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
     private View mMask;
     private ImageView mImgIndicator;
     private RecyclerView mListViewFolder;
-    private RecyclerView mRecyclerView;
+    private GridView mGridView;
     private AdapterMediaGrid mAdapter;
     private AdapterListFolder mAdapterListFolder;
     private MediaManager mMediaManager;
@@ -61,12 +61,8 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_picker);
         if (savedInstanceState != null){
-            if (savedInstanceState.containsKey(DEST_PHOTO_PATH)){
-                mDestPhotoUri = savedInstanceState.getString(DEST_PHOTO_PATH);
-            }
-            if (savedInstanceState.containsKey(DEST_VIDEO_PATH)){
-                mDestVideoUri = savedInstanceState.getString(DEST_VIDEO_PATH);
-            }
+            mDestPhotoUri = savedInstanceState.getString(DEST_PHOTO_PATH);
+            mDestVideoUri = savedInstanceState.getString(DEST_VIDEO_PATH);
         }
 
         mTxtTitle = (TextView) findViewById(R.id.txt_title);
@@ -86,15 +82,16 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
         mListViewFolder.getLayoutParams().height = h;
         mListViewFolder.requestLayout();
 
+        int dp5 = (int) Math.ceil(metrics.density * 5);
+
         mMask = findViewById(R.id.mask);
         mMask.setOnClickListener(v -> doToggleListFolder());
 
         mImgIndicator = (ImageView) findViewById(R.id.img_indicator);
 
-        this.mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        this.mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
+        this.mGridView = (GridView) findViewById(R.id.grid_view);
         this.mAdapter = new AdapterMediaGrid(this);
-        this.mRecyclerView.setAdapter(this.mAdapter);
+        this.mGridView.setAdapter(this.mAdapter);
 
         Config config = new Config.Builder()
                 .image(new Config.Request(9, 500 * 1024))
@@ -142,7 +139,7 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
     }
 
     @Override
-    public void onMediaSelect(Type type, int count) {
+    public void onMediaSelect(@MediaEntity.Type int type, int count) {
         if (type == mCurMediaFolder.getType()){
             mTxtSelectCount.setEnabled(count > 0);
             mTxtSelectCount.setText(String.format("下一步(%s)", count));
@@ -222,7 +219,7 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
                 File f = new File(mDestPhotoUri);
                 long length = f.length();
                 if (f.exists() && f.length() > 0){
-                    MediaEntity entity = new MediaEntity(mDestPhotoUri, Type.Image);
+                    MediaEntity entity = new MediaEntity(mDestPhotoUri, MediaEntity.IMAGE);
                     mMediaManager.toggle(entity);
                 }
 
@@ -230,7 +227,7 @@ public class ActivityPicker extends Activity implements View.OnClickListener,
                 File f = new File(mDestVideoUri);
                 long length = f.length();
                 if (f.exists() && f.length() > 0){
-                    MediaEntity entity = new MediaEntity(mDestVideoUri, Type.Video);
+                    MediaEntity entity = new MediaEntity(mDestVideoUri, MediaEntity.VIDEO);
                     mMediaManager.toggle(entity);
                 }
 

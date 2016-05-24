@@ -63,8 +63,8 @@ public class ActivityVideoShower extends ActivityShower implements MediaManager.
     }
 
     @Override
-    protected Type getCurType() {
-        return Type.Video;
+    protected @MediaEntity.Type int getCurType() {
+        return MediaEntity.VIDEO;
     }
 
     //貌似设置ViewVideo的高度无效

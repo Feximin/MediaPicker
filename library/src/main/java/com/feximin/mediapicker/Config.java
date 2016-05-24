@@ -11,7 +11,7 @@ import java.util.Map;
 public class Config  {
 
     private List<String> mSuffixList = new ArrayList<>(3);
-    private Map<Type, Request> mRequestMap = new HashMap<>(3);
+    private Map<Integer, Request> mRequestMap = new HashMap<>(3);
 
     Config() { }
 
@@ -20,7 +20,7 @@ public class Config  {
         return  mRequestMap.get(entity.getType());
     }
 
-    public Map<Type, Request> getRequestMap(){
+    public Map<Integer, Request> getRequestMap(){
         return mRequestMap;
     }
 
@@ -32,7 +32,7 @@ public class Config  {
 
     public static class Builder{
         List<String> suffixList = new ArrayList<>(8);
-        private Map<Type, Request> requestMap = new HashMap<>(3);
+        private Map<Integer, Request> requestMap = new HashMap<>(3);
 
         public Builder(){
             suffixList.add("jpg");
@@ -46,14 +46,14 @@ public class Config  {
         }
         public Builder image(Request request){
             if (request != null){
-                requestMap.put(Type.Image, request);
+                requestMap.put(MediaEntity.IMAGE, request);
             }
             return this;
         }
 
         public Builder video(Request request){
             if (request != null){
-                requestMap.put(Type.Video, request);
+                requestMap.put(MediaEntity.VIDEO, request);
             }
 
             return this;
@@ -61,7 +61,7 @@ public class Config  {
 
         public Builder audio(Request request){
             if (request != null){
-                requestMap.put(Type.Audio, request);
+                requestMap.put(MediaEntity.AUDIO, request);
             }
             return this;
         }

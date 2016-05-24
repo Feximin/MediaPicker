@@ -1,12 +1,9 @@
 package com.feximin.mediapicker;
 
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.LayoutParams;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,22 +17,17 @@ import static android.support.v7.widget.RecyclerView.ViewHolder;
 /**
  * Created by Neo on 16/1/30.
  */
-public class AdapterMediaGrid extends RecyclerView.Adapter<AdapterMediaGrid.OpViewHolder> {
+public class AdapterMediaGrid extends BaseAdapter {
 
     private ActivityPicker mActivity;
     private List<MediaEntity> mDada;
     private MediaFolder mDataFolder;
     private LayoutInflater mInflater;
-    private int mItemWidth;
-    private int mItemPadding = 6;
     private MediaManager mediaManager;
     public AdapterMediaGrid(ActivityPicker activity){
         this.mActivity = activity;
         this.mDada = new ArrayList<>();
         this.mInflater = LayoutInflater.from(mActivity);
-        DisplayMetrics metrics = mActivity.getResources().getDisplayMetrics();
-        mItemPadding *= metrics.density;
-        mItemWidth = (metrics.widthPixels - 2 * mItemPadding) / 3;
         mediaManager = MediaManager.getInstance(mActivity);
     }
 
@@ -47,59 +39,6 @@ public class AdapterMediaGrid extends RecyclerView.Adapter<AdapterMediaGrid.OpVi
         mDada.addAll(folder.getChildren());
 
         notifyDataSetChanged();
-    }
-
-    @Override
-    public OpViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Log.v("onCreateViewHolder", "onCreateViewHolder + type" + viewType);
-        if (viewType == Type.Image.ordinal()){
-            return new ImageViewHolder(mInflater.inflate(R.layout.item_grid, null));
-        }else if (viewType == Type.Video.ordinal()){
-            return new VideoViewHolder(mInflater.inflate(R.layout.item_grid_video, null));
-
-        }else if (viewType == TYPE_OP){
-            return new OpViewHolder(mInflater.inflate(R.layout.item_op, null));
-        }
-        else {
-            throw new IllegalArgumentException("no this kind of viewType");
-        }
-    }
-
-    @Override
-    public void onBindViewHolder(OpViewHolder h, int position) {
-        LayoutParams lp = (LayoutParams) h.itemView.getLayoutParams();
-        if(lp == null){
-            lp = new LayoutParams(mItemWidth, mItemWidth);
-            lp.topMargin = mItemPadding;
-            h.itemView.setLayoutParams(lp);
-        }
-        lp.rightMargin = position % 3 == 2?0:mItemPadding;
-
-        Type type = mDataFolder.getType();
-        if (position == 0){
-            if (type == Type.Image){
-                h.img.setImageResource(R.mipmap.img_op_camera);
-                h.img.setOnClickListener(v -> mActivity.toTakePhoto());
-            }else if (type == Type.Video){
-                h.img.setImageResource(R.mipmap.img_op_video);
-                h.img.setOnClickListener(v -> mActivity.toMakeVideo());
-            }
-        }else {
-            ImageViewHolder holder = (ImageViewHolder) h;
-            int realPosition = position - 1;
-            MediaEntity en = mDada.get(realPosition);
-            holder.imgCheckBox.setSelected(mediaManager.isSelected(en));
-            holder.imgCheckBox.setOnClickListener(v1 -> mediaManager.toggle(en));
-
-
-            Glide.with(mActivity).load(en.getPath()).crossFade().into(holder.img);
-            if (type == Type.Image){
-                holder.foreView.setOnClickListener(v -> ActivityImageShower.startActivity(mActivity, mDataFolder, realPosition));
-            }else if (type == Type.Video){
-                ((VideoViewHolder)holder).txtTime.setText(getSecond(en.getDuration()));
-                holder.foreView.setOnClickListener(v -> ActivityVideoShower.startActivity(mActivity, en));
-            }
-        }
     }
 
     private StringBuilder getSecond(long milli){
@@ -125,21 +64,83 @@ public class AdapterMediaGrid extends RecyclerView.Adapter<AdapterMediaGrid.OpVi
         return sb;
     }
 
-    private static final int TYPE_OP = 1024;        //第一个item，表示拍照或者录像
-
     @Override
-    public int getItemViewType(int position) {
-        if (position == 0) return TYPE_OP;
-        return mDataFolder.getType().ordinal();
-    }
-
-
-
-    @Override
-    public int getItemCount() {
+    public int getCount() {
         int count = mDada.size();
         if (count > 0) count ++;
         return count;
+    }
+
+    @Override
+    public MediaEntity getItem(int position) {
+        if (position == 0) return null;
+        return mDada.get(position - 1);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return 0;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        int type = getItemViewType(position);
+        if (convertView == null){
+            if (type == 0){
+                convertView = mInflater.inflate(R.layout.item_op, null);
+            }else if (type == MediaEntity.IMAGE){
+                convertView = mInflater.inflate(R.layout.item_grid, null);
+            }else if (type == MediaEntity.AUDIO){
+                convertView = mInflater.inflate(R.layout.item_grid, null);
+            }else if (type == MediaEntity.VIDEO){
+                convertView = mInflater.inflate(R.layout.item_grid_video, null);
+            }else{
+                throw new IllegalArgumentException("no this kind of viewType");
+            }
+        }
+
+        int folderType = mDataFolder.getType();
+        if (position == 0){
+            ImageView img = (ImageView) convertView;
+            if (folderType == MediaEntity.IMAGE){
+                img.setImageResource(R.mipmap.img_op_camera);
+                img.setOnClickListener(v -> mActivity.toTakePhoto());
+            }else if (type == MediaEntity.VIDEO){
+                img.setImageResource(R.mipmap.img_op_video);
+                img.setOnClickListener(v -> mActivity.toMakeVideo());
+            }
+        }else {
+            ImageView imgCover = (ImageView) convertView.findViewById(R.id.img);
+            ImageView imgCheck = (ImageView) convertView.findViewById(R.id.img_check_box);
+            View foreView = convertView.findViewById(R.id.mask_foreground);
+            int realPosition = position - 1;
+            MediaEntity en = mDada.get(realPosition);
+            imgCheck.setSelected(mediaManager.isSelected(en));
+            imgCheck.setOnClickListener(v1 -> mediaManager.toggle(en));
+
+
+            Glide.with(mActivity).load(en.getPath()).crossFade().into(imgCover);
+            if (type == MediaEntity.IMAGE){
+                foreView.setOnClickListener(v -> ActivityImageShower.startActivity(mActivity, mDataFolder, realPosition));
+            }else if (type == MediaEntity.VIDEO){
+                TextView txtTime = (TextView) convertView.findViewById(R.id.txt_time);
+                txtTime.setText(getSecond(en.getDuration()));
+                foreView.setOnClickListener(v -> ActivityVideoShower.startActivity(mActivity, en));
+            }
+        }
+        return convertView;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (position == 0) return 0;
+        MediaEntity entity = mDada.get(position - 1);
+        return entity.getType();
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return 4;
     }
 
     public static class OpViewHolder extends ViewHolder{

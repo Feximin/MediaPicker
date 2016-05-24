@@ -19,6 +19,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.feximin.mediapicker.ActivityVideoShower" />
+        <activity android:name="com.feximin.mediapicker.ActivityPicker"/>
     </application>
 
 </manifest>

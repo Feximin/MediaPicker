@@ -3,6 +3,8 @@ package com.feximin.mediapicker;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.feximin.mediapicker.MediaEntity.Type;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,23 +19,23 @@ public class MediaFolder implements Parcelable {
     private String albumPath ;   // 第一张图片作为封面
     private List<MediaEntity> children = new ArrayList<>(1);
 
-    private Type type;
+    private int type;
 
     public MediaFolder(){}
 
     public MediaFolder(String name){
         this.name = name;
     }
-    public MediaFolder(String name, Type type){
+    public MediaFolder(String name, @Type int type){
         this.name = name;
         this.type = type;
     }
 
-    public Type getType() {
+    public @Type int getType() {
         return type;
     }
 
-    public void setType(Type type) {
+    public void setType(@Type int type) {
         this.type = type;
     }
 
@@ -100,7 +102,7 @@ public class MediaFolder implements Parcelable {
         dest.writeString(this.name);
         dest.writeString(this.albumPath);
         dest.writeTypedList(children);
-        dest.writeInt(this.type == null ? -1 : this.type.ordinal());
+        dest.writeInt(this.type);
     }
 
     protected MediaFolder(Parcel in) {
@@ -109,15 +111,16 @@ public class MediaFolder implements Parcelable {
         this.name = in.readString();
         this.albumPath = in.readString();
         this.children = in.createTypedArrayList(MediaEntity.CREATOR);
-        int tmpType = in.readInt();
-        this.type = tmpType == -1 ? null : Type.values()[tmpType];
+        this.type = in.readInt();
     }
 
     public static final Creator<MediaFolder> CREATOR = new Creator<MediaFolder>() {
+        @Override
         public MediaFolder createFromParcel(Parcel source) {
             return new MediaFolder(source);
         }
 
+        @Override
         public MediaFolder[] newArray(int size) {
             return new MediaFolder[size];
         }

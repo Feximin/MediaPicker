@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
+import com.feximin.mediapicker.MediaEntity.Type;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +51,8 @@ public class ActivityImageShower extends ActivityShower implements ViewPager.OnP
     }
 
     @Override
-    protected Type getCurType() {
-        return Type.Image;
+    protected @Type int getCurType() {
+        return MediaEntity.IMAGE;
     }
 
     public static final String MEDIA_FOLDER = "media_folder";

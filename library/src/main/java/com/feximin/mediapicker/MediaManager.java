@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.widget.Toast;
 
+import com.feximin.mediapicker.MediaEntity.Type;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +68,7 @@ public class MediaManager {
 
 
     public interface OnMediaSelectListener{
-        void onMediaSelect(Type type, int count);
+        void onMediaSelect(@Type int type, int count);
     }
 
     private List<OnMediaSelectListener> mOnMediaSelectListenerList = new ArrayList<>(2);
@@ -97,13 +99,13 @@ public class MediaManager {
     }
 
     private void showNoMoreThanHint(MediaEntity entity){
-        Type type = entity.getType();
+        @Type int type = entity.getType();
         String format = "";
-        if (type == Type.Image){
+        if (type == MediaEntity.IMAGE){
             format = "最多只能选择%d张图片";
-        }else if (type == Type.Video){
+        }else if (type == MediaEntity.VIDEO){
             format = "最多只能选择%d个视频";
-        }else if (type == Type.Audio){
+        }else if (type == MediaEntity.AUDIO){
             format = "最多只能选择%d条音频";
         }else {
             throw  new IllegalArgumentException("no this kind of media entity !!");
@@ -119,7 +121,7 @@ public class MediaManager {
     public int getSelectedCount(MediaEntity entity){
         return getSelectedCount(entity.getType());
     }
-    public int getSelectedCount(Type type){
+    public int getSelectedCount(@Type int type){
         int count = 0;
         for (MediaEntity en : mSelectedList){
             if (en.getType() == type){

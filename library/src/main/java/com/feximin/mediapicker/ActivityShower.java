@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.feximin.mediapicker.MediaEntity.Type;
+
 /**
  * Created by Neo on 16/3/9.
  */
@@ -13,7 +15,7 @@ public abstract class ActivityShower extends Activity  implements MediaManager.O
     protected MediaManager mMediaManager;
     protected ImageView mImgCheck;
     protected TextView mTxtTitle;
-    protected Type mCurType;
+    protected @Type int mCurType;
 
 
     @Override
@@ -33,11 +35,11 @@ public abstract class ActivityShower extends Activity  implements MediaManager.O
 
     protected abstract void toggle();
 
-    protected abstract Type getCurType();
+    protected abstract @Type int getCurType();
 
 
     @Override
-    public void onMediaSelect(Type type, int count) {
+    public void onMediaSelect(@Type int type, int count) {
         if (type == mCurType){
             mTxtSelectCount.setEnabled(count>0);
             mTxtSelectCount.setText(String.format("下一步(%s)", count));
