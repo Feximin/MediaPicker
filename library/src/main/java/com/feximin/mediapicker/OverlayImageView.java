@@ -1,7 +1,8 @@
 package com.feximin.mediapicker;
 
 import android.content.Context;
-import android.graphics.LightingColorFilter;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
@@ -11,7 +12,7 @@ import android.widget.ImageView;
  * 点击之后有一个遮罩效果
  */
 public class OverlayImageView extends ImageView {
-    private int mOverlayColor = 0xFFCCCCCC;
+    private int mOverlayColor = 0x60000000;
     public OverlayImageView(Context context) {
         this(context, null);
     }
@@ -34,10 +35,11 @@ public class OverlayImageView extends ImageView {
         Drawable d = getDrawable();
         if (d != null && !d.isStateful()) {
             if (pressed){
-                d.setColorFilter(new LightingColorFilter(mOverlayColor, 0x00000000));
+                d.setColorFilter(new PorterDuffColorFilter(mOverlayColor, PorterDuff.Mode.DARKEN));
             }else{
                 d.clearColorFilter();
             }
+            invalidate();
         }
     }
 }
