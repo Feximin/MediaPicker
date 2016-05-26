@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageView
+    <com.feximin.mediapicker.OverlayImageView
         android:id="@+id/img"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -25,12 +25,6 @@
         android:text="00:12"
         android:textColor="@color/fff"
         android:textSize="13sp" />
-
-    <View
-        android:id="@+id/mask_foreground"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/selector_transparent_30_000" />
 
     <ImageView
         android:id="@+id/img_check_box"

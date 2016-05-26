@@ -12,8 +12,6 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.support.v7.widget.RecyclerView.ViewHolder;
-
 /**
  * Created by Neo on 16/1/30.
  */
@@ -112,7 +110,6 @@ public class AdapterMediaGrid extends BaseAdapter {
         }else {
             ImageView imgCover = (ImageView) convertView.findViewById(R.id.img);
             ImageView imgCheck = (ImageView) convertView.findViewById(R.id.img_check_box);
-            View foreView = convertView.findViewById(R.id.mask_foreground);
             int realPosition = position - 1;
             MediaEntity en = mDada.get(realPosition);
             imgCheck.setSelected(mediaManager.isSelected(en));
@@ -121,7 +118,7 @@ public class AdapterMediaGrid extends BaseAdapter {
 
             Glide.with(mActivity).load(en.getPath()).crossFade().into(imgCover);
             if (type == MediaEntity.IMAGE){
-                foreView.setOnClickListener(v -> {
+                imgCover.setOnClickListener(v -> {
                     if (mOnMediaClickListener == null){
                         ActivityImageShower.startActivity(mActivity, mDataFolder, realPosition);
                     }else {
@@ -131,7 +128,7 @@ public class AdapterMediaGrid extends BaseAdapter {
             }else if (type == MediaEntity.VIDEO){
                 TextView txtTime = (TextView) convertView.findViewById(R.id.txt_time);
                 txtTime.setText(getSecond(en.getDuration()));
-                foreView.setOnClickListener(v -> {
+                imgCover.setOnClickListener(v -> {
                     if (mOnMediaClickListener == null){
                         ActivityVideoShower.startActivity(mActivity, en);
                     }else {
@@ -165,32 +162,4 @@ public class AdapterMediaGrid extends BaseAdapter {
         return 4;
     }
 
-    public static class OpViewHolder extends ViewHolder{
-        protected ImageView img;
-        public OpViewHolder(View itemView) {
-            super(itemView);
-            img = (ImageView) itemView.findViewById(R.id.img);
-        }
-    }
-
-    public static class ImageViewHolder extends OpViewHolder {
-
-        protected ImageView imgCheckBox;
-        protected View foreView;
-        public ImageViewHolder(View itemView) {
-            super(itemView);
-            imgCheckBox = (ImageView) itemView.findViewById(R.id.img_check_box);
-            foreView = itemView.findViewById(R.id.mask_foreground);
-
-        }
-    }
-
-    public static class VideoViewHolder extends ImageViewHolder{
-
-        TextView txtTime;
-        public VideoViewHolder(View itemView) {
-            super(itemView);
-            txtTime = (TextView) itemView.findViewById(R.id.txt_time);
-        }
-    }
 }

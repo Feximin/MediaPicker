@@ -14,6 +14,10 @@ public class Config  {
     private Map<Integer, Request> mRequestMap = new HashMap<>(3);
     private Crop crop;
 
+    public static Config obtain(){
+        return new Config();
+    }
+
     public Config() {
 
         mSuffixList.add("jpg");

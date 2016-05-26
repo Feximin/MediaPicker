@@ -75,6 +75,7 @@ public abstract class ActivityPicker extends Activity implements View.OnClickLis
 
         mTxtSelectCount = (TextView) findViewById(R.id.txt_right);
         mTxtSelectCount.setOnClickListener(v -> onNextStep());
+        mTxtSelectCount.setEnabled(false);
         mListViewFolder = (RecyclerView) findViewById(R.id.recycler_view_folder);
         mListViewFolder.setLayoutManager(new LinearLayoutManager(this));
         mAdapterListFolder = new AdapterListFolder(this);
@@ -246,7 +247,7 @@ public abstract class ActivityPicker extends Activity implements View.OnClickLis
                 }
 
             }else if (requestCode == REQUEST_CROP_PHOTO){
-                if (isValidFile(mDestPhotoUri)){
+                if (isValidFile(mDestCropPhotoUri)){
                     onCropFinish(mDestCropPhotoUri);
                 }else{
                     Toast.makeText(ActivityPicker.this, "裁剪失败", Toast.LENGTH_SHORT).show();

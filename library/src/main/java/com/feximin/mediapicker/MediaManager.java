@@ -6,6 +6,7 @@ import android.widget.Toast;
 import com.feximin.mediapicker.MediaEntity.Type;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.feximin.mediapicker.MediaFinder.OnRefreshListener;
@@ -33,6 +34,23 @@ public class MediaManager {
     public void initConfig(Config config){
         this.mConfig = config;
         this.mMediaFinder.setConfig(config);
+    }
+
+    public void removeAll(@Type int type){
+        Iterator<MediaEntity> iterator = mSelectedList.iterator();
+        while (iterator.hasNext()){
+            MediaEntity entity = iterator.next();
+            if (entity.getType() == type){
+                iterator.remove();
+            }
+        }
+    }
+
+    public void remove(MediaEntity entity){
+        if (entity == null) return;
+        if (isSelected(entity)){
+            mSelectedList.remove(entity);
+        }
     }
 
     /**
