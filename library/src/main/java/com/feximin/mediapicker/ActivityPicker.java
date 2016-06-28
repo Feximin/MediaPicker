@@ -1,8 +1,10 @@
 package com.feximin.mediapicker;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -20,6 +22,7 @@ import android.view.animation.AnticipateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,6 +59,7 @@ public abstract class ActivityPicker extends Activity implements View.OnClickLis
     private String mDestPhotoUri;
     private String mDestVideoUri;
     private String mDestCropPhotoUri;
+    private ImageButton mIbBack;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -72,6 +76,11 @@ public abstract class ActivityPicker extends Activity implements View.OnClickLis
         mTxtTitle.setOnClickListener(this);
         mTxtTitle.setText("所有图片");
         mTxtTitle.setEnabled(false);
+
+        this.mIbBack = (ImageButton) findViewById(R.id.but_back);
+        this.mIbBack.setOnClickListener(v -> finish());
+
+
 
         mTxtSelectCount = (TextView) findViewById(R.id.txt_right);
         mTxtSelectCount.setOnClickListener(v -> onNextStep());
@@ -191,30 +200,35 @@ public abstract class ActivityPicker extends Activity implements View.OnClickLis
     }
 
     public void toTakePhoto(){
+        if (!isIntentExisting(this, MediaStore.ACTION_IMAGE_CAPTURE)){
+            Toast.makeText(ActivityPicker.this, "没有拍照应用", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent intent = new Intent();
         intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
         if (mDestPhotoUri == null) mDestPhotoUri = getMediaOutputUri("jpg");
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(mDestPhotoUri)));
         try {
             startActivityForResult(intent, REQUEST_TAKE_PHOTO);
-        } catch (ActivityNotFoundException e) {
-            e.printStackTrace();
-            Toast.makeText(ActivityPicker.this, "没有拍照应用", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(ActivityPicker.this, "拍照失败", Toast.LENGTH_SHORT).show();
         }
     }
 
     public void toMakeVideo(){
+        if (!isIntentExisting(this, MediaStore.ACTION_VIDEO_CAPTURE)){
+            Toast.makeText(ActivityPicker.this, "没有录像应用", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent intent = new Intent();
         intent.setAction(MediaStore.ACTION_VIDEO_CAPTURE);
         if (mDestVideoUri == null) mDestVideoUri = getMediaOutputUri("mp4");
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(mDestVideoUri)));
+        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, .1f);                   //质量
+        intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 1000 * 60 * 30);       //最长30分钟
+        intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 1024 * 1024 * 100);        //是大100M
         try {
             startActivityForResult(intent, REQUEST_MAKE_VIDEO);
-        } catch (ActivityNotFoundException e) {
-            e.printStackTrace();
-            Toast.makeText(ActivityPicker.this, "没有录像应用", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(ActivityPicker.this, "录制失败", Toast.LENGTH_SHORT).show();
         }
@@ -349,6 +363,13 @@ public abstract class ActivityPicker extends Activity implements View.OnClickLis
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+    }
+
+    public boolean isIntentExisting(Context context, String action) {
+        final PackageManager packageManager = context.getPackageManager();
+        final Intent intent = new Intent(action);
+        List<ResolveInfo> resolveInfo = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        return resolveInfo.size() > 0;
     }
 
     @Override

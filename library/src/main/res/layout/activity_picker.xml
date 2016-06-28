@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -26,10 +27,10 @@
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLength="10"
-            android:singleLine="true"
-            android:text="明天去哪里吃饭，这是个问题"
+            android:maxLines="1"
             android:textColor="@drawable/selector_color_444_111"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            tools:text="明天去哪里吃饭，这是个问题" />
 
         <ImageView
             android:id="@+id/img_indicator"
